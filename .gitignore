@@ -1,0 +1,29 @@
+# dependencies
+node_modules
+**/node_modules
+
+# env files (keep examples versioned)
+.env
+.env.*
+**/.env
+**/.env.*
+!**/.env.example
+
+# build/test artifacts
+dist
+build
+coverage
+*.tsbuildinfo
+
+# runtime local data
+apps/api/data/local-db.json
+
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# os files
+.DS_Store
+Thumbs.db
