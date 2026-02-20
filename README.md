@@ -7,6 +7,7 @@ Sistema web para criar, editar e exportar curriculos (PDF e DOCX).
 - Prisma removido.
 - API usa persistencia local em arquivo: `apps/api/data/local-db.json`.
 - Login e cadastro usam Local Storage no navegador.
+- Curriculos e versoes no frontend usam Local Storage por padrao.
 - Integracao com banco ficou para depois.
 
 ## Stack
@@ -66,11 +67,21 @@ npm run dev
 - Web: `http://localhost:5173`
 - API: `http://localhost:3333`
 
+## Modo local (padrao)
+
+- O frontend funciona sem API para login/cadastro/curriculos.
+- Se quiser forcar chamadas para a API no frontend, adicione em `apps/web/.env`:
+
+```bash
+VITE_USE_API=true
+```
+
 ## Login/Cadastro (temporario)
 
 - Feitos via Local Storage do navegador.
 - Cada navegador/maquina tem seus proprios usuarios locais.
 - Esqueci senha/reset tambem funcionam localmente e mostram token no fluxo da tela/console.
+- Usuario demo: `demo@curriculo.com` / `123456`
 
 ## Scripts uteis
 
