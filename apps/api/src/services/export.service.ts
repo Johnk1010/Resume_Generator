@@ -1,7 +1,6 @@
 import type { ResumeDto } from "@curriculo/shared";
 import puppeteer from "puppeteer";
 import { env } from "../lib/env.js";
-import { renderResumeDocx } from "../views/templates/render-docx.js";
 import { renderResumeHtml } from "../views/templates/render-html.js";
 import { sanitizeFilename } from "../views/templates/utils.js";
 
@@ -44,9 +43,5 @@ export const exportPdf = async (resume: ResumeDto): Promise<Buffer> => {
   } finally {
     await browser.close();
   }
-};
-
-export const exportDocx = async (resume: ResumeDto): Promise<Buffer> => {
-  return renderResumeDocx(resume);
 };
 

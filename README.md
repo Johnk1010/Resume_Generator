@@ -1,6 +1,6 @@
 # Resume_Generator
 
-Sistema web para criar, editar e exportar curriculos (PDF e DOCX).
+Sistema web para criar, editar e exportar curriculos (PDF).
 
 ## Status atual (sem banco)
 
@@ -76,7 +76,7 @@ npm run dev
 VITE_USE_API=true
 ```
 
-## Ativar exportacao PDF/DOCX (API)
+## Ativar exportacao PDF (API)
 
 1. Garanta os `.env`:
 
@@ -101,7 +101,7 @@ npm run dev
 4. Teste API:
 - `http://localhost:3333/health` deve responder `{"status":"ok"}`.
 
-5. No editor, use `Exportar PDF` ou `Exportar DOCX`.
+5. No editor, use `Exportar PDF`.
 
 Se o PDF falhar por navegador do Puppeteer:
 - Defina no `apps/api/.env` o caminho do Chrome:
@@ -148,11 +148,10 @@ Curriculos:
 - `POST /resumes/:id/versions`
 - `POST /resumes/:id/versions/:versionId/restore`
 - `GET /resumes/:id/export/pdf`
-- `GET /resumes/:id/export/docx`
 
 # Gerador de Curriculo
 
-Sistema web para criar, editar e exportar curriculos (PDF e DOCX).
+Sistema web para criar, editar e exportar curriculos (PDF).
 
 ## Status atual (sem banco)
 
@@ -266,4 +265,3 @@ Curriculos:
 - `POST /resumes/:id/versions`
 - `POST /resumes/:id/versions/:versionId/restore`
 - `GET /resumes/:id/export/pdf`
-- `GET /resumes/:id/export/docx`

@@ -131,7 +131,7 @@ export const EditResumePage = () => {
     return () => window.removeEventListener("beforeunload", handler);
   }, [dirty, draft, id]);
 
-  const handleDownload = async (format: "pdf" | "docx") => {
+  const handleDownload = async (format: "pdf") => {
     if (!id) {
       return;
     }
@@ -212,13 +212,6 @@ export const EditResumePage = () => {
               className="rounded-full border border-ink/20 px-4 py-2 text-sm font-semibold"
             >
               Exportar PDF
-            </button>
-            <button
-              type="button"
-              onClick={() => handleDownload("docx")}
-              className="rounded-full border border-ink/20 px-4 py-2 text-sm font-semibold"
-            >
-              Exportar DOCX
             </button>
           </div>
 

@@ -406,7 +406,7 @@ export const restoreVersionRequest = async (id: string, versionId: string): Prom
 
 export const downloadExportRequest = async (
   id: string,
-  format: "pdf" | "docx"
+  format: "pdf"
 ): Promise<{ blob: Blob; fileName: string }> => {
   if (!USE_API) {
     throw new Error("Exportacao requer API ativa. Defina VITE_USE_API=true para habilitar.");

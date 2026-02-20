@@ -9,7 +9,6 @@ import {
   createVersionController,
   deleteResumeController,
   duplicateResumeController,
-  exportDocxController,
   exportPdfController,
   getResumeController,
   listResumesController,
@@ -34,6 +33,5 @@ router.get("/:id/versions", listVersionsController);
 router.post("/:id/versions", validateBody(createVersionSchema), createVersionController);
 router.post("/:id/versions/:versionId/restore", restoreVersionController);
 router.get("/:id/export/pdf", exportPdfController);
-router.get("/:id/export/docx", exportDocxController);
 
 export default router;

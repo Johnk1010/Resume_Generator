@@ -1,6 +1,6 @@
 import type { RequestHandler } from "express";
 import { HttpError } from "../lib/errors.js";
-import { buildExportBaseName, exportDocx, exportPdf } from "../services/export.service.js";
+import { buildExportBaseName, exportPdf } from "../services/export.service.js";
 import {
   createResume,
   createVersion,
@@ -128,23 +128,6 @@ export const exportPdfController: RequestHandler = async (req, res, next) => {
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader("Content-Disposition", `attachment; filename=\"${fileBaseName}.pdf\"`);
     res.send(pdf);
-  } catch (error) {
-    next(error);
-  }
-};
-
-export const exportDocxController: RequestHandler = async (req, res, next) => {
-  try {
-    const resume = await getResumeForExport(req.auth!.userId, readResumeId(req.params.id));
-    const fileBaseName = buildExportBaseName(resume);
-    const docx = await exportDocx(resume);
-
-    res.setHeader(
-      "Content-Type",
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-    );
-    res.setHeader("Content-Disposition", `attachment; filename=\"${fileBaseName}.docx\"`);
-    res.send(docx);
   } catch (error) {
     next(error);
   }

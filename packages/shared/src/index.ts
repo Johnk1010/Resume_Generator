@@ -262,7 +262,7 @@ export const buildDefaultResumeContent = (): ResumeContent => ({
         makeItem({
           name: "Gerador de Currículos",
           link: "https://github.com/exemplo",
-          description: "Aplicação web com exportação em PDF/DOCX."
+          description: "Aplicação web com exportação em PDF."
         })
       ]
     },
