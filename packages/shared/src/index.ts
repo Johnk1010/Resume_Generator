@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const templateIds = ["minimal", "modern", "professional"] as const;
+export const templateIds = ["minimal", "modern", "professional", "executive", "creative"] as const;
 export type TemplateId = (typeof templateIds)[number];
 
 export const sectionTypes = [
@@ -43,6 +43,8 @@ export interface ResumeSection {
   type: SectionType;
   title: string;
   items: SectionItem[];
+  pageBreakBefore?: boolean;
+  layoutColumn?: "auto" | "left" | "right";
 }
 
 export interface ResumeContent {
@@ -138,7 +140,9 @@ export const resumeSectionSchema = z.object({
   id: z.string(),
   type: z.enum(sectionTypes),
   title: z.string().min(1),
-  items: z.array(sectionItemSchema)
+  items: z.array(sectionItemSchema),
+  pageBreakBefore: z.boolean().optional(),
+  layoutColumn: z.enum(["auto", "left", "right"]).optional()
 });
 
 export const resumeContentSchema = z.object({

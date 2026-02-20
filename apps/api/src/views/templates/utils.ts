@@ -25,6 +25,8 @@ export const itemField = (item: SectionItem, key: string): string => {
   return item.fields[key]?.trim() ?? "";
 };
 
+const joinNonEmpty = (values: string[], separator: string): string => values.filter(Boolean).join(separator);
+
 export const formatSectionItem = (section: ResumeSection, item: SectionItem): string => {
   const safe = (value: string) => escapeHtml(value);
 
@@ -33,16 +35,21 @@ export const formatSectionItem = (section: ResumeSection, item: SectionItem): st
       return `<p class="item-text">${safe(itemField(item, "text"))}</p>`;
     }
     case "experience": {
+      const title = joinNonEmpty([itemField(item, "role"), itemField(item, "company")], " - ");
+      const period = joinNonEmpty([itemField(item, "startDate"), itemField(item, "endDate")], " - ");
+      const meta = joinNonEmpty([period, itemField(item, "location")], " | ");
       return `
-        <div class="item-title">${safe(itemField(item, "role"))} - ${safe(itemField(item, "company"))}</div>
-        <div class="item-meta">${safe(itemField(item, "startDate"))} - ${safe(itemField(item, "endDate"))} | ${safe(itemField(item, "location"))}</div>
+        <div class="item-title">${safe(title)}</div>
+        <div class="item-meta">${safe(meta)}</div>
         <p class="item-text">${safe(itemField(item, "description"))}</p>
       `;
     }
     case "education": {
+      const period = joinNonEmpty([itemField(item, "startDate"), itemField(item, "endDate")], " - ");
+      const meta = joinNonEmpty([itemField(item, "institution"), period], " | ");
       return `
         <div class="item-title">${safe(itemField(item, "degree"))}</div>
-        <div class="item-meta">${safe(itemField(item, "institution"))} | ${safe(itemField(item, "startDate"))} - ${safe(itemField(item, "endDate"))}</div>
+        <div class="item-meta">${safe(meta)}</div>
         <p class="item-text">${safe(itemField(item, "description"))}</p>
       `;
     }
@@ -67,13 +74,15 @@ export const formatSectionItem = (section: ResumeSection, item: SectionItem): st
       `;
     }
     case "certifications": {
+      const meta = joinNonEmpty([itemField(item, "issuer"), itemField(item, "year")], " - ");
       return `
         <div class="item-title">${safe(itemField(item, "name"))}</div>
-        <div class="item-meta">${safe(itemField(item, "issuer"))} ${safe(itemField(item, "year"))}</div>
+        <div class="item-meta">${safe(meta)}</div>
       `;
     }
     case "languages": {
-      return `<div class="item-title">${safe(itemField(item, "language"))}: ${safe(itemField(item, "level"))}</div>`;
+      const label = joinNonEmpty([itemField(item, "language"), itemField(item, "level")], ": ");
+      return `<div class="item-title">${safe(label)}</div>`;
     }
     case "custom": {
       const rows = Object.entries(item.fields)

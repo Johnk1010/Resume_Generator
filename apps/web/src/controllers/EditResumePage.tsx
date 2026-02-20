@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type { ResumeDto, UpdateResumeInput } from "@curriculo/shared";
+import type { ResumeDto, ResumeSection, UpdateResumeInput } from "@curriculo/shared";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useParams } from "react-router-dom";
 import {
@@ -209,6 +209,21 @@ export const EditResumePage = () => {
     [selectedLlmId]
   );
 
+  const handlePreviewSectionsReorder = useCallback((sections: ResumeSection[]) => {
+    setDraft((current) =>
+      current
+        ? {
+            ...current,
+            content: {
+              ...current.content,
+              sections
+            }
+          }
+        : current
+    );
+    setDirty(true);
+  }, []);
+
   if (!id) {
     return <p className="text-sm text-red-600">ID de currículo inválido.</p>;
   }
@@ -222,8 +237,8 @@ export const EditResumePage = () => {
   }
 
   return (
-    <section className="grid gap-5 xl:grid-cols-[1.1fr_1fr]">
-      <div className="space-y-4">
+    <section className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(720px,46vw)] xl:items-start">
+      <div className="min-w-0 space-y-4">
         <article className="rounded-3xl border border-teal/20 bg-white p-4">
           <h1 className="font-heading text-2xl font-bold text-ink">Editor</h1>
           <div className="mt-3 grid gap-3 sm:grid-cols-2">
@@ -408,9 +423,9 @@ export const EditResumePage = () => {
         />
       </div>
 
-      <aside className="xl:sticky xl:top-6 xl:h-fit">
+      <aside className="min-w-0 xl:w-full xl:flex-none xl:sticky xl:top-4 xl:h-[calc(100vh-2rem)] xl:pl-3 xl:border-l xl:border-black/10">
         <h2 className="mb-2 font-heading text-xl font-bold text-ink">Preview</h2>
-        <ResumePreview resume={draft} />
+        <ResumePreview resume={draft} onSectionsReorder={handlePreviewSectionsReorder} />
       </aside>
     </section>
   );

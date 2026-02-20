@@ -1,9 +1,11 @@
-import { Link, Outlet, useNavigate } from "react-router-dom";
+import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../models/context/auth-context";
 
 export const AppShell = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const isResumeEditPage = /^\/app\/resumes\/[^/]+\/edit$/.test(location.pathname);
 
   const handleLogout = () => {
     logout();
@@ -28,7 +30,7 @@ export const AppShell = () => {
           </div>
         </div>
       </header>
-      <main className="mx-auto w-full max-w-7xl px-5 py-6">
+      <main className={`mx-auto w-full px-5 py-6 ${isResumeEditPage ? "max-w-none" : "max-w-7xl"}`}>
         <Outlet />
       </main>
     </div>

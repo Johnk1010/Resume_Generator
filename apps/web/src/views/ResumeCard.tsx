@@ -11,7 +11,9 @@ interface ResumeCardProps {
 const templateLabelMap: Record<ResumeDto["templateId"], string> = {
   minimal: "Minimalista",
   modern: "Moderno",
-  professional: "Profissional"
+  professional: "Profissional",
+  executive: "Executivo",
+  creative: "Criativo"
 };
 
 export const ResumeCard = ({ resume, onDuplicate, onDelete, onRename }: ResumeCardProps) => {

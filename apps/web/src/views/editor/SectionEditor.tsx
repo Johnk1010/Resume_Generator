@@ -194,7 +194,9 @@ export const SectionEditor = ({ sections, onChange }: SectionEditorProps) => {
         id: crypto.randomUUID(),
         type,
         title: type === "custom" ? "Nova Seção" : sectionTypeOptions.find((option) => option.type === type)?.label ?? "Seção",
-        items: [createEmptyItem(type)]
+        items: [createEmptyItem(type)],
+        pageBreakBefore: false,
+        layoutColumn: "auto"
       }
     ]);
   };

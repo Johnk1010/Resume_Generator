@@ -21,6 +21,7 @@ const MAX_TEXT_FILE_CHARS = 18_000;
 const MAX_SECTIONS = 10;
 const MAX_ITEMS_PER_SECTION = 12;
 const MAX_FIELD_LENGTH = 400;
+const MAX_LONG_TEXT_LENGTH = 2000;
 const REQUEST_TIMEOUT_MS = 90_000;
 
 export const llmProviders = ["gemini", "chatgpt"] as const;
@@ -28,7 +29,7 @@ export type LlmProvider = (typeof llmProviders)[number];
 
 const promptOutputShape = `{
   "title": "string",
-  "templateId": "minimal|modern|professional",
+  "templateId": "minimal|modern|professional|executive|creative",
   "theme": {
     "primaryColor": "#RRGGBB",
     "secondaryColor": "#RRGGBB",
@@ -52,7 +53,27 @@ const promptOutputShape = `{
       "type": "summary|experience|education|skills|projects|certifications|languages|custom",
       "title": "string",
       "items": [
-        { "text": "..." }
+        { "text": "..." },
+        {
+          "role": "...",
+          "company": "...",
+          "startDate": "...",
+          "endDate": "...",
+          "location": "...",
+          "description": "..."
+        },
+        {
+          "degree": "...",
+          "institution": "...",
+          "startDate": "...",
+          "endDate": "...",
+          "description": "..."
+        },
+        { "name": "..." },
+        { "name": "...", "link": "...", "description": "..." },
+        { "name": "...", "issuer": "...", "year": "..." },
+        { "language": "...", "level": "..." },
+        { "campo_livre": "valor livre" }
       ]
     }
   ]
@@ -63,11 +84,14 @@ Voce analisa modelos de curriculo (imagem ou arquivo) e converte para JSON estru
 Responda somente com JSON valido, sem markdown, sem explicacoes.
 
 Regras:
-- Mantenha a estrutura visual inferida no templateId e no tema.
+- Preserve o formato visual o mais fiel possivel: template, ordem das secoes e titulos das secoes.
+- Inferir densidade visual: use theme.spacing "compact" para layout adensado e "comfortable" para layout arejado.
 - Extraia texto fiel do modelo quando possivel.
 - Nao invente experiencias detalhadas; se faltar dado, use string vazia.
-- Seja conciso: evite repeticoes e limite cada campo a poucas frases.
+- Nao resuma nem reescreva em excesso: mantenha o texto original sempre que legivel.
 - Sempre inclua header e sections.
+- Preencha contatos principais no header.
+- So crie secao de contato se houver dados adicionais que nao cabem no header (ex.: data de nascimento, nacionalidade, estado civil).
 - Para cada section.type, use estes campos:
   - summary: text
   - experience: role, company, startDate, endDate, location, description
@@ -148,17 +172,29 @@ const normalizeToken = (value: string): string =>
     .toLowerCase()
     .replace(/[^a-z0-9]/g, "");
 
-const toSafeText = (value: unknown, maxLength = MAX_FIELD_LENGTH): string => {
+const toSafeText = (
+  value: unknown,
+  maxLength = MAX_FIELD_LENGTH,
+  preserveLineBreaks = false
+): string => {
   if (typeof value !== "string") {
     return "";
   }
 
-  const compact = value.replace(/\s+/g, " ").trim();
-  if (!compact) {
+  const normalized = preserveLineBreaks
+    ? value
+        .replace(/\r\n/g, "\n")
+        .split("\n")
+        .map((line) => line.replace(/[ \t]+/g, " ").trim())
+        .filter(Boolean)
+        .join("\n")
+    : value.replace(/\s+/g, " ").trim();
+
+  if (!normalized) {
     return "";
   }
 
-  return compact.slice(0, maxLength);
+  return normalized.slice(0, maxLength);
 };
 
 const clone = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T;
@@ -302,7 +338,7 @@ const buildFieldLookup = (rawFields: Record<string, unknown>): Map<string, strin
       continue;
     }
 
-    const normalizedValue = toSafeText(value);
+    const normalizedValue = toSafeText(value, MAX_LONG_TEXT_LENGTH, true);
     if (!normalizedValue) {
       continue;
     }
@@ -316,9 +352,16 @@ const buildFieldLookup = (rawFields: Record<string, unknown>): Map<string, strin
 const readField = (
   lookup: Map<string, string>,
   primaryKey: string,
-  fallbackFields: Record<string, unknown>
+  fallbackFields: Record<string, unknown>,
+  options?: {
+    maxLength?: number;
+    preserveLineBreaks?: boolean;
+  }
 ): string => {
-  const direct = toSafeText(fallbackFields[primaryKey]);
+  const maxLength = options?.maxLength ?? MAX_FIELD_LENGTH;
+  const preserveLineBreaks = options?.preserveLineBreaks ?? false;
+
+  const direct = toSafeText(fallbackFields[primaryKey], maxLength, preserveLineBreaks);
   if (direct) {
     return direct;
   }
@@ -328,7 +371,7 @@ const readField = (
   for (const alias of aliases) {
     const hit = lookup.get(normalizeToken(alias));
     if (hit) {
-      return hit;
+      return toSafeText(hit, maxLength, preserveLineBreaks);
     }
   }
 
@@ -360,7 +403,7 @@ const normalizeSectionItems = (type: SectionType, rawItems: unknown): Normalized
       if (type === "custom") {
         const fields = Object.entries(sourceFields).slice(0, 8).reduce<Record<string, string>>((acc, [key, value]) => {
           const normalizedKey = toSafeText(key, 30).replace(/\s+/g, "_");
-          const normalizedValue = toSafeText(value);
+          const normalizedValue = toSafeText(value, MAX_LONG_TEXT_LENGTH, true);
 
           if (!normalizedKey || !normalizedValue) {
             return acc;
@@ -384,7 +427,13 @@ const normalizeSectionItems = (type: SectionType, rawItems: unknown): Normalized
       const fields = createEmptyFields(type);
 
       for (const key of sectionFieldMap[type]) {
-        fields[key] = readField(lookup, key, sourceFields);
+        const isLongText = key === "text" || key === "description";
+        fields[key] = readField(
+          lookup,
+          key,
+          sourceFields,
+          isLongText ? { maxLength: MAX_LONG_TEXT_LENGTH, preserveLineBreaks: true } : undefined
+        );
       }
 
       const hasValue = Object.values(fields).some((value) => value.length > 0);
@@ -411,6 +460,109 @@ const normalizeSectionItems = (type: SectionType, rawItems: unknown): Normalized
   ];
 };
 
+const contactSectionTitleHints = [
+  "contato",
+  "contact",
+  "dadospessoais",
+  "informacoespessoais",
+  "personal",
+  "informacoes"
+];
+
+const contactFieldKeyHints = [
+  "email",
+  "mail",
+  "phone",
+  "telefone",
+  "celular",
+  "contato",
+  "location",
+  "local",
+  "cidade",
+  "endereco",
+  "address",
+  "linkedin",
+  "github",
+  "website",
+  "site",
+  "portfolio"
+];
+
+const isContactSectionTitle = (title: string): boolean => {
+  const token = normalizeToken(title);
+  return contactSectionTitleHints.some((hint) => token.includes(hint));
+};
+
+const isContactFieldKey = (key: string): boolean => {
+  const token = normalizeToken(key);
+  return contactFieldKeyHints.some((hint) => token.includes(hint));
+};
+
+const compactComparableValue = (value: string): string => normalizeToken(value);
+
+const removeHeaderContactDuplicates = (
+  sections: ResumeSection[],
+  header: HeaderContent
+): ResumeSection[] => {
+  const headerValues = new Set(
+    [header.email, header.phone, header.location, header.website, header.linkedIn, header.github]
+      .map((value) => compactComparableValue(value))
+      .filter((value) => value.length > 0)
+  );
+
+  if (headerValues.size === 0) {
+    return sections;
+  }
+
+  const normalized = sections
+    .map<ResumeSection | null>((section) => {
+      if (section.type !== "custom" || !isContactSectionTitle(section.title)) {
+        return section;
+      }
+
+      const cleanedItems = section.items
+        .map<ResumeSection["items"][number] | null>((item) => {
+          const filteredFields = Object.entries(item.fields).reduce<Record<string, string>>((acc, [key, value]) => {
+            const normalizedValue = compactComparableValue(value);
+
+            if (!normalizedValue) {
+              return acc;
+            }
+
+            const duplicatedHeaderValue = headerValues.has(normalizedValue);
+            if (duplicatedHeaderValue && isContactFieldKey(key)) {
+              return acc;
+            }
+
+            acc[key] = value;
+            return acc;
+          }, {});
+
+          if (Object.keys(filteredFields).length === 0) {
+            return null;
+          }
+
+          return {
+            ...item,
+            fields: filteredFields
+          };
+        })
+        .filter((item): item is ResumeSection["items"][number] => item !== null);
+
+      if (cleanedItems.length === 0) {
+        return null;
+      }
+
+      return {
+        ...section,
+        items: cleanedItems
+      };
+    })
+    .filter((section): section is ResumeSection => section !== null);
+
+  return normalized.length > 0 ? normalized : sections;
+};
+
 const normalizeSections = (rawSections: unknown, fallbackSections: ResumeSection[]): ResumeSection[] => {
   if (!Array.isArray(rawSections) || rawSections.length === 0) {
     return clone(fallbackSections);
@@ -426,14 +578,16 @@ const normalizeSections = (rawSections: unknown, fallbackSections: ResumeSection
 
     const items = normalizeSectionItems(type, entry.items);
 
-    return [
-      {
-        id: randomUUID() as string,
-        type,
-        title,
-        items
-      }
-    ];
+    const section: ResumeSection = {
+      id: randomUUID() as string,
+      type,
+      title,
+      items,
+      pageBreakBefore: false,
+      layoutColumn: "auto"
+    };
+
+    return [section];
   });
 
   if (normalized.length > 0) {
@@ -916,10 +1070,18 @@ export const analyzeTemplateWithAI = async (input: AnalyzeTemplateInput): Promis
     sections: normalizeSections(rawSections, fallbackSections)
   };
 
+  const cleanedSections = removeHeaderContactDuplicates(
+    normalizedContent.sections,
+    normalizedContent.header
+  );
+
   return {
     title: toSafeText(parsedDraft.title, 120) || input.currentTitle,
     templateId: normalizeTemplateId(parsedDraft.templateId, input.currentTemplateId),
-    content: normalizedContent,
+    content: {
+      ...normalizedContent,
+      sections: cleanedSections
+    },
     theme: normalizeTheme(rawTheme, input.currentTheme ?? defaultTheme)
   };
 };

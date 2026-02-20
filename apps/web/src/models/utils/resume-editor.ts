@@ -5,27 +5,37 @@ export const templateOptions: Array<{ id: TemplateId; label: string; description
   {
     id: "minimal",
     label: "Minimalista",
-    description: "Uma coluna limpa e foco em conteúdo."
+    description: "Uma coluna limpa e foco em conteudo."
   },
   {
     id: "modern",
     label: "Moderno",
-    description: "Cabeçalho forte e blocos destacados."
+    description: "Cabecalho forte e blocos destacados."
   },
   {
     id: "professional",
     label: "Profissional",
-    description: "Duas colunas com informações laterais."
+    description: "Duas colunas com informacoes laterais."
+  },
+  {
+    id: "executive",
+    label: "Executivo",
+    description: "Visual corporativo com leitura objetiva."
+  },
+  {
+    id: "creative",
+    label: "Criativo",
+    description: "Layout com destaque visual e blocos em estilo portfolio."
   }
 ];
 
 export const sectionTypeOptions: Array<{ type: SectionType; label: string }> = [
   { type: "summary", label: "Resumo" },
-  { type: "experience", label: "Experiência" },
-  { type: "education", label: "Educação" },
+  { type: "experience", label: "Experiencia" },
+  { type: "education", label: "Educacao" },
   { type: "skills", label: "Habilidades" },
   { type: "projects", label: "Projetos" },
-  { type: "certifications", label: "Certificações" },
+  { type: "certifications", label: "Certificacoes" },
   { type: "languages", label: "Idiomas" },
   { type: "custom", label: "Personalizada" }
 ];
@@ -41,32 +51,32 @@ const defaultFieldConfigMap: Record<SectionType, FieldConfig[]> = {
   experience: [
     { key: "role", label: "Cargo" },
     { key: "company", label: "Empresa" },
-    { key: "startDate", label: "Início" },
+    { key: "startDate", label: "Inicio" },
     { key: "endDate", label: "Fim" },
     { key: "location", label: "Local" },
-    { key: "description", label: "Descrição", multiline: true }
+    { key: "description", label: "Descricao", multiline: true }
   ],
   education: [
-    { key: "degree", label: "Curso/Título" },
-    { key: "institution", label: "Instituição" },
-    { key: "startDate", label: "Início" },
+    { key: "degree", label: "Curso/Titulo" },
+    { key: "institution", label: "Instituicao" },
+    { key: "startDate", label: "Inicio" },
     { key: "endDate", label: "Fim" },
-    { key: "description", label: "Descrição", multiline: true }
+    { key: "description", label: "Descricao", multiline: true }
   ],
-  skills: [{ key: "name", label: "Skills (separadas por vírgula)", multiline: true }],
+  skills: [{ key: "name", label: "Skills (separadas por virgula)", multiline: true }],
   projects: [
     { key: "name", label: "Projeto" },
     { key: "link", label: "Link" },
-    { key: "description", label: "Descrição", multiline: true }
+    { key: "description", label: "Descricao", multiline: true }
   ],
   certifications: [
-    { key: "name", label: "Certificação" },
+    { key: "name", label: "Certificacao" },
     { key: "issuer", label: "Emissor" },
     { key: "year", label: "Ano" }
   ],
   languages: [
     { key: "language", label: "Idioma" },
-    { key: "level", label: "Nível" }
+    { key: "level", label: "Nivel" }
   ],
   custom: [{ key: "titulo", label: "Campo", multiline: false }]
 };
@@ -91,7 +101,9 @@ export const createSection = (type: SectionType): ResumeSection => ({
   id: crypto.randomUUID(),
   type,
   title: normalizeSectionTitle(type),
-  items: [createEmptyItem(type)]
+  items: [createEmptyItem(type)],
+  pageBreakBefore: false,
+  layoutColumn: "auto"
 });
 
 export const reorderSections = (
@@ -112,4 +124,3 @@ export const reorderSections = (
 
   return next;
 };
-
