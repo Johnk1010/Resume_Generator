@@ -1,4 +1,5 @@
 import type { Request, Response, NextFunction } from "express";
+import { MulterError } from "multer";
 import { HttpError } from "../lib/errors.js";
 
 export const errorHandler = (
@@ -9,6 +10,16 @@ export const errorHandler = (
 ): void => {
   if (error instanceof HttpError) {
     res.status(error.statusCode).json({ message: error.message });
+    return;
+  }
+
+  if (error instanceof MulterError) {
+    if (error.code === "LIMIT_FILE_SIZE") {
+      res.status(413).json({ message: "Arquivo excede limite de 8MB." });
+      return;
+    }
+
+    res.status(400).json({ message: error.message });
     return;
   }
 

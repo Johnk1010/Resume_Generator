@@ -110,6 +110,15 @@ Se o PDF falhar por navegador do Puppeteer:
 PUPPETEER_EXECUTABLE_PATH="C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"
 ```
 
+Para importar modelo com IA (print ou arquivo), configure tambem:
+
+```bash
+GEMINI_API_KEY="sua_chave_gemini"
+GEMINI_MODEL="gemini-2.5-flash"
+OPENAI_API_KEY="sua_chave_openai"
+OPENAI_MODEL="gpt-4.1-mini"
+```
+
 ## Login/Cadastro (temporario)
 
 - Feitos via Local Storage do navegador.
@@ -148,6 +157,7 @@ Curriculos:
 - `POST /resumes/:id/versions`
 - `POST /resumes/:id/versions/:versionId/restore`
 - `GET /resumes/:id/export/pdf`
+- `POST /resumes/:id/import-template` (multipart: `file` + opcionais `llmProvider`, `llmModel`)
 
 # Gerador de Curriculo
 
@@ -265,3 +275,4 @@ Curriculos:
 - `POST /resumes/:id/versions`
 - `POST /resumes/:id/versions/:versionId/restore`
 - `GET /resumes/:id/export/pdf`
+- `POST /resumes/:id/import-template` (multipart: `file` + opcionais `llmProvider`, `llmModel`)

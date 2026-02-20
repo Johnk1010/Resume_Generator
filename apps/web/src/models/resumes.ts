@@ -404,6 +404,50 @@ export const restoreVersionRequest = async (id: string, versionId: string): Prom
   }
 };
 
+export const importTemplateRequest = async (
+  id: string,
+  file: File,
+  options?: {
+    llmProvider?: "gemini" | "chatgpt";
+    llmModel?: string;
+  }
+): Promise<ResumeDto> => {
+  if (!USE_API) {
+    throw new Error("Importacao com IA requer API ativa. Defina VITE_USE_API=true.");
+  }
+
+  const formData = new FormData();
+  formData.append("file", file);
+
+  if (options?.llmProvider) {
+    formData.append("llmProvider", options.llmProvider);
+  }
+
+  if (options?.llmModel?.trim()) {
+    formData.append("llmModel", options.llmModel.trim());
+  }
+
+  try {
+    const response = await api.post<ResumeDto>(`/resumes/${id}/import-template`, formData);
+    return response.data;
+  } catch (error) {
+    if (isApiUnavailable(error)) {
+      throw new Error("Importacao com IA requer API ativa em http://localhost:3333");
+    }
+
+    if (axios.isAxiosError(error)) {
+      const message =
+        typeof error.response?.data?.message === "string" ? error.response.data.message : null;
+
+      if (message) {
+        throw new Error(message);
+      }
+    }
+
+    throw error;
+  }
+};
+
 export const downloadExportRequest = async (
   id: string,
   format: "pdf"

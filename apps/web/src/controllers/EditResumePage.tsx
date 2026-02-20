@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ResumeDto, UpdateResumeInput } from "@curriculo/shared";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useParams } from "react-router-dom";
@@ -6,6 +6,7 @@ import {
   createVersionRequest,
   downloadExportRequest,
   getResumeRequest,
+  importTemplateRequest,
   listVersionsRequest,
   restoreVersionRequest,
   updateResumeRequest
@@ -33,6 +34,23 @@ const buildPayload = (resume: ResumeDto): UpdateResumeInput => ({
   theme: resume.theme
 });
 
+const llmOptions = [
+  {
+    id: "gemini",
+    label: "Gemini 2.5 Flash",
+    provider: "gemini" as const,
+    model: "gemini-2.5-flash",
+    envHint: "GEMINI_API_KEY"
+  },
+  {
+    id: "chatgpt",
+    label: "ChatGPT 4.1 mini",
+    provider: "chatgpt" as const,
+    model: "gpt-4.1-mini",
+    envHint: "OPENAI_API_KEY"
+  }
+] as const;
+
 export const EditResumePage = () => {
   const { id } = useParams<{ id: string }>();
   const queryClient = useQueryClient();
@@ -41,6 +59,10 @@ export const EditResumePage = () => {
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
   const [statusError, setStatusError] = useState<string | null>(null);
   const [restoringVersionId, setRestoringVersionId] = useState<string | null>(null);
+  const [templateFile, setTemplateFile] = useState<File | null>(null);
+  const [fileInputKey, setFileInputKey] = useState(0);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [selectedLlmId, setSelectedLlmId] = useState<(typeof llmOptions)[number]["id"]>("gemini");
 
   const resumeQuery = useQuery({
     queryKey: ["resume", id],
@@ -93,6 +115,28 @@ export const EditResumePage = () => {
       void queryClient.invalidateQueries({ queryKey: ["resume", id] });
       void queryClient.invalidateQueries({ queryKey: ["versions", id] });
       void queryClient.invalidateQueries({ queryKey: ["resumes"] });
+    }
+  });
+
+  const importTemplateMutation = useMutation({
+    mutationFn: (payload: { file: File; llmProvider: "gemini" | "chatgpt"; llmModel: string }) =>
+      importTemplateRequest(id!, payload.file, {
+        llmProvider: payload.llmProvider,
+        llmModel: payload.llmModel
+      }),
+    onSuccess: (updated) => {
+      setDraft(updated);
+      setDirty(false);
+      setLastSavedAt(new Date());
+      setStatusError(null);
+      setTemplateFile(null);
+      setFileInputKey((value) => value + 1);
+      queryClient.setQueryData(["resume", id], updated);
+      void queryClient.invalidateQueries({ queryKey: ["resumes"] });
+      void queryClient.invalidateQueries({ queryKey: ["versions", id] });
+    },
+    onError: (error) => {
+      setStatusError(error instanceof Error ? error.message : "Erro ao importar modelo com IA");
     }
   });
 
@@ -159,6 +203,11 @@ export const EditResumePage = () => {
 
     return "Tudo salvo";
   }, [dirty, lastSavedAt, saveMutation.isPending]);
+
+  const selectedLlmOption = useMemo(
+    () => llmOptions.find((option) => option.id === selectedLlmId) ?? llmOptions[0],
+    [selectedLlmId]
+  );
 
   if (!id) {
     return <p className="text-sm text-red-600">ID de currículo inválido.</p>;
@@ -228,6 +277,83 @@ export const EditResumePage = () => {
                 setDirty(true);
               }}
             />
+          </div>
+        </article>
+
+        <article className="rounded-3xl border border-teal/20 bg-white p-4">
+          <h2 className="font-heading text-base font-bold text-ink">Importar modelo com IA</h2>
+          <p className="mt-1 text-xs text-ink/70">
+            Envie print ou arquivo (.png, .jpg, .pdf, .docx, .txt). A IA copia esse modelo para o formato editavel do projeto.
+          </p>
+
+          <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+            <div className="flex items-center gap-2 text-xs text-ink/60">
+              <span className="font-semibold uppercase tracking-[0.08em]">LLM</span>
+              <select
+                value={selectedLlmId}
+                onChange={(event) => setSelectedLlmId(event.target.value as (typeof llmOptions)[number]["id"])}
+                className="rounded-full border border-black/10 bg-slate-50 px-3 py-1 text-xs font-semibold text-ink/80"
+              >
+                {llmOptions.map((option) => (
+                  <option value={option.id} key={option.id}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div className="mt-3">
+            <input
+              key={fileInputKey}
+              ref={fileInputRef}
+              type="file"
+              accept=".png,.jpg,.jpeg,.webp,.pdf,.doc,.docx,.txt,.md,.rtf"
+              onChange={(event) => {
+                const nextFile = event.target.files?.[0] ?? null;
+                setTemplateFile(nextFile);
+              }}
+              className="hidden"
+            />
+
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="rounded-full border border-ink/20 px-4 py-2 text-sm font-semibold text-ink hover:border-teal"
+              >
+                {templateFile ? "Trocar arquivo" : "Selecionar arquivo"}
+              </button>
+              <span className="text-xs text-ink/70">
+                {templateFile ? templateFile.name : "Nenhum arquivo selecionado"}
+              </span>
+            </div>
+          </div>
+
+          <div className="mt-3 flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                if (!templateFile) {
+                  setStatusError("Selecione um arquivo para importar.");
+                  return;
+                }
+
+                setStatusError(null);
+                importTemplateMutation.mutate({
+                  file: templateFile,
+                  llmProvider: selectedLlmOption.provider,
+                  llmModel: selectedLlmOption.model
+                });
+              }}
+              disabled={importTemplateMutation.isPending || !templateFile}
+              className="rounded-full bg-ink px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+            >
+              {importTemplateMutation.isPending ? "Analisando..." : "Analisar e aplicar modelo"}
+            </button>
+            <p className="self-center text-xs text-ink/60">
+              Requer API ativa (`VITE_USE_API=true`) e {selectedLlmOption.envHint} no backend.
+            </p>
           </div>
         </article>
 

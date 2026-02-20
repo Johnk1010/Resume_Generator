@@ -1,4 +1,5 @@
 import { Router } from "express";
+import multer from "multer";
 import {
   createResumeSchema,
   createVersionSchema,
@@ -11,6 +12,7 @@ import {
   duplicateResumeController,
   exportPdfController,
   getResumeController,
+  importTemplateController,
   listResumesController,
   listVersionsController,
   restoreVersionController,
@@ -20,6 +22,12 @@ import { requireAuth } from "../middleware/require-auth.js";
 import { validateBody } from "../middleware/validate-body.js";
 
 const router = Router();
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 8 * 1024 * 1024
+  }
+});
 
 router.use(requireAuth);
 
@@ -33,5 +41,6 @@ router.get("/:id/versions", listVersionsController);
 router.post("/:id/versions", validateBody(createVersionSchema), createVersionController);
 router.post("/:id/versions/:versionId/restore", restoreVersionController);
 router.get("/:id/export/pdf", exportPdfController);
+router.post("/:id/import-template", upload.single("file"), importTemplateController);
 
 export default router;

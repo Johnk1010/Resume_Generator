@@ -23,6 +23,7 @@ import {
   toResumeVersionDto,
   toResumeVersionSnapshot
 } from "../views/resume.view.js";
+import { analyzeTemplateWithAI, type TemplateImportFile } from "./template-import.service.js";
 
 const getOwnedResumeOrThrow = async (resumeId: string, userId: string) => {
   const resume = await findResumeByIdAndUser(resumeId, userId);
@@ -141,4 +142,36 @@ export const restoreVersion = async (
 export const getResumeForExport = async (userId: string, resumeId: string): Promise<ResumeDto> => {
   const resume = await getOwnedResumeOrThrow(resumeId, userId);
   return toResumeDto(resume);
+};
+
+export const importTemplateIntoResume = async (
+  userId: string,
+  resumeId: string,
+  input: {
+    file: TemplateImportFile;
+    llmProvider?: string;
+    llmModel?: string;
+  }
+): Promise<ResumeDto> => {
+  const resume = await getOwnedResumeOrThrow(resumeId, userId);
+  const resumeDto = toResumeDto(resume);
+
+  const analyzed = await analyzeTemplateWithAI({
+    file: input.file,
+    llmProvider: input.llmProvider,
+    llmModel: input.llmModel,
+    currentTitle: resume.title,
+    currentTemplateId: resume.templateId as ResumeDto["templateId"],
+    currentContent: resumeDto.content,
+    currentTheme: resumeDto.theme
+  });
+
+  const updated = await updateResumeRecord(resume.id, {
+    title: analyzed.title,
+    templateId: analyzed.templateId,
+    content: toInputJson(analyzed.content),
+    theme: toInputJson(analyzed.theme)
+  });
+
+  return toResumeDto(updated);
 };

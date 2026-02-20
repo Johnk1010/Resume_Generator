@@ -7,7 +7,11 @@ const envSchema = z.object({
   ACCESS_TOKEN_TTL: z.string().default("15m"),
   REFRESH_TOKEN_TTL_DAYS: z.coerce.number().default(14),
   WEB_URL: z.string().url().default("http://localhost:5173"),
-  PUPPETEER_EXECUTABLE_PATH: z.string().optional()
+  PUPPETEER_EXECUTABLE_PATH: z.string().optional(),
+  GEMINI_API_KEY: z.string().optional(),
+  GEMINI_MODEL: z.string().default("gemini-2.5-flash"),
+  OPENAI_API_KEY: z.string().optional(),
+  OPENAI_MODEL: z.string().default("gpt-4.1-mini")
 });
 
 export const env = envSchema.parse(process.env);

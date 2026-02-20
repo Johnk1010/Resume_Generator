@@ -8,6 +8,7 @@ import {
   duplicateResume,
   getResume,
   getResumeForExport,
+  importTemplateIntoResume,
   listResumes,
   listVersions,
   restoreVersion,
@@ -128,6 +129,32 @@ export const exportPdfController: RequestHandler = async (req, res, next) => {
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader("Content-Disposition", `attachment; filename=\"${fileBaseName}.pdf\"`);
     res.send(pdf);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const importTemplateController: RequestHandler = async (req, res, next) => {
+  try {
+    if (!req.file) {
+      throw new HttpError(400, "Arquivo do modelo e obrigatorio");
+    }
+
+    const llmProvider = typeof req.body?.llmProvider === "string" ? req.body.llmProvider : undefined;
+    const llmModel = typeof req.body?.llmModel === "string" ? req.body.llmModel : undefined;
+
+    const updated = await importTemplateIntoResume(req.auth!.userId, readResumeId(req.params.id), {
+      file: {
+        fileName: req.file.originalname,
+        mimeType: req.file.mimetype,
+        size: req.file.size,
+        buffer: req.file.buffer
+      },
+      llmProvider,
+      llmModel
+    });
+
+    res.json(updated);
   } catch (error) {
     next(error);
   }
