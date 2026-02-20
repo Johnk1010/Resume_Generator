@@ -1,5 +1,6 @@
 import type { ResumeDto } from "@curriculo/shared";
 import puppeteer from "puppeteer";
+import { env } from "../lib/env.js";
 import { renderResumeDocx } from "../views/templates/render-docx.js";
 import { renderResumeHtml } from "../views/templates/render-html.js";
 import { sanitizeFilename } from "../views/templates/utils.js";
@@ -12,9 +13,17 @@ export const buildExportBaseName = (resume: ResumeDto): string => {
 };
 
 export const exportPdf = async (resume: ResumeDto): Promise<Buffer> => {
-  const browser = await puppeteer.launch({
+  const launchOptions: Parameters<typeof puppeteer.launch>[0] = {
     headless: true,
     args: ["--no-sandbox", "--disable-setuid-sandbox"]
+  };
+
+  if (env.PUPPETEER_EXECUTABLE_PATH && env.PUPPETEER_EXECUTABLE_PATH.trim().length > 0) {
+    launchOptions.executablePath = env.PUPPETEER_EXECUTABLE_PATH.trim();
+  }
+
+  const browser = await puppeteer.launch({
+    ...launchOptions
   });
 
   try {

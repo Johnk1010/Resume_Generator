@@ -76,6 +76,40 @@ npm run dev
 VITE_USE_API=true
 ```
 
+## Ativar exportacao PDF/DOCX (API)
+
+1. Garanta os `.env`:
+
+```bash
+copy apps\\api\\.env.example apps\\api\\.env
+copy apps\\web\\.env.example apps\\web\\.env
+```
+
+2. No `apps/web/.env`, deixe:
+
+```bash
+VITE_API_URL="http://localhost:3333"
+VITE_USE_API="true"
+```
+
+3. Inicie:
+
+```bash
+npm run dev
+```
+
+4. Teste API:
+- `http://localhost:3333/health` deve responder `{"status":"ok"}`.
+
+5. No editor, use `Exportar PDF` ou `Exportar DOCX`.
+
+Se o PDF falhar por navegador do Puppeteer:
+- Defina no `apps/api/.env` o caminho do Chrome:
+
+```bash
+PUPPETEER_EXECUTABLE_PATH="C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"
+```
+
 ## Login/Cadastro (temporario)
 
 - Feitos via Local Storage do navegador.

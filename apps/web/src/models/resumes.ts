@@ -39,7 +39,7 @@ const LOCAL_RESUMES_KEY = "curriculo_local_resumes";
 const LOCAL_VERSIONS_KEY = "curriculo_local_versions";
 const LOCAL_SESSION_KEY = "curriculo_local_session";
 const LOCAL_USERS_KEY = "curriculo_local_users";
-const USE_API = import.meta.env.VITE_USE_API === "true";
+const USE_API = import.meta.env.VITE_USE_API !== "false";
 
 const readJson = <T>(key: string, fallback: T): T => {
   const raw = window.localStorage.getItem(key);
