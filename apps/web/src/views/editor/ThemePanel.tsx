@@ -14,7 +14,7 @@ export const ThemePanel = ({ theme, onChange }: ThemePanelProps) => {
         <label className="text-xs font-semibold text-ink/70">
           Cor primária
           <input
-            className="mt-1 h-10 w-full rounded-xl border border-black/10 p-1"
+            className="mt-1 h-8 w-full rounded-full p-0"
             type="color"
             value={theme.primaryColor}
             onChange={(event) => onChange({ ...theme, primaryColor: event.target.value })}
@@ -23,7 +23,7 @@ export const ThemePanel = ({ theme, onChange }: ThemePanelProps) => {
         <label className="text-xs font-semibold text-ink/70">
           Cor secundária
           <input
-            className="mt-1 h-10 w-full rounded-xl border border-black/10 p-1"
+            className="mt-1 h-8 w-full rounded-full p-0"
             type="color"
             value={theme.secondaryColor}
             onChange={(event) => onChange({ ...theme, secondaryColor: event.target.value })}
@@ -32,7 +32,7 @@ export const ThemePanel = ({ theme, onChange }: ThemePanelProps) => {
         <label className="text-xs font-semibold text-ink/70">
           Cor de texto
           <input
-            className="mt-1 h-10 w-full rounded-xl border border-black/10 p-1"
+            className="mt-1 h-8 w-full rounded-full p-0"
             type="color"
             value={theme.textColor}
             onChange={(event) => onChange({ ...theme, textColor: event.target.value })}
